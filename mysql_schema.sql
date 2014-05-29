@@ -40,7 +40,7 @@ CREATE TABLE oah_county_limits (
 
 DROP TABLE IF EXISTS oah_limits;
 CREATE TABLE oah_limits (
-  planid      SERIAL,
+  planid      BIGINT(20) UNSIGNED,
   minltv      FLOAT UNSIGNED,
   maxltv      FLOAT UNSIGNED,
   minfico     SMALLINT UNSIGNED,
@@ -131,9 +131,11 @@ DELIMITER ;
 
 -- ------------------------------------
 -- change path as needed
-LOAD DATA INFILE 'Limits.csv' INTO TABLE oah_limits;
-LOAD DATA INFILE 'Adjustments.csv' INTO TABLE oah_adjustments;
-LOAD DATA INFILE 'Rates.csv' INTO TABLE oah_rates;
+LOAD DATA INFILE 'Limits.csv' INTO TABLE oah_limits FIELDS TERMINATED BY ',';
+LOAD DATA INFILE 'Adjustments.csv' INTO TABLE oah_adjustments FIELDS TERMINATED BY ',';
+LOAD DATA INFILE 'Rates.csv' INTO TABLE oah_rates FIELDS TERMINATED BY ',' (institution, stateid, loanpurpose,
+  pmttype, loantype, loanterm, intadjterm, `lock`, baserate, totalpoints, io, offersagency, planid, armindex,
+  interestrateadjustmentcap, annualcap, loancap, armmargin, aivalue);
 
 -- ------------------------------------
 -- create user, change name and password
