@@ -8,32 +8,31 @@ USE dbname;
 
 DROP TABLE IF EXISTS oah_state;
 CREATE TABLE oah_state (
-  stateid     SERIAL,
+  state_fips  CHAR(2),
   state_name  VARCHAR(100),
-  CONSTRAINT oah_state_pri_key PRIMARY KEY (stateid)
+  CONSTRAINT oah_state_pri_key PRIMARY KEY (state_fips)
 )
   ENGINE = InnoDB
   DEFAULT CHARACTER SET = utf8;
 
 DROP TABLE IF EXISTS oah_county;
 CREATE TABLE oah_county (
-  countyid    SERIAL,
-  county_name VARCHAR(100),
-  CONSTRAINT oah_county_pri_key PRIMARY KEY (countyid)
+  complete_fips CHAR(5),
+  county_fips   CHAR(3) NOT NULL,
+  county_name   VARCHAR(100) NOT NULL,
+  CONSTRAINT oah_county_pri_key PRIMARY KEY (complete_fips)
 )
   ENGINE = InnoDB
   DEFAULT CHARACTER SET = utf8;
 
 DROP TABLE IF EXISTS oah_county_limits;
 CREATE TABLE oah_county_limits (
-  limitid     SERIAL,
-  stateid     BIGINT(20) UNSIGNED NOT NULL,
-  countyid    BIGINT(20) UNSIGNED NOT NULL,
-  gse_limit   NUMERIC(12, 2),
+  complete_fips CHAR(5),
   fha_limit   NUMERIC(12, 2),
-  CONSTRAINT oah_county_limits_pri_key PRIMARY KEY (limitid),
-  FOREIGN KEY (stateid) REFERENCES oah_state(stateid),
-  FOREIGN KEY (countyid) REFERENCES oah_county(countyid)
+  gse_limit   NUMERIC(12, 2),
+  va_limit    NUMERIC(12, 2),
+  CONSTRAINT oah_county_limits_pri_key PRIMARY KEY (complete_fips),
+  FOREIGN KEY (complete_fips) REFERENCES oah_county(complete_fips)
 )
   ENGINE = InnoDB
   DEFAULT CHARACTER SET = utf8;
@@ -110,22 +109,23 @@ CREATE TABLE oah_adjustments (
 -- procedure to populate county_limits
 DROP PROCEDURE IF EXISTS county_limit;
 DELIMITER $$
-CREATE PROCEDURE county_limit(IN state VARCHAR(100), IN county VARCHAR(100), IN fhalimit VARCHAR(100), IN gselimit VARCHAR(100))
+CREATE PROCEDURE county_limit(IN state VARCHAR(100), IN statefips CHAR(2), IN county VARCHAR(100),
+    IN countyfips CHAR(3), IN fhalimit VARCHAR(100), IN gselimit VARCHAR(100), IN valimit VARCHAR(100))
   BEGIN
-    DECLARE sid BIGINT(20) UNSIGNED;
-    DECLARE cid BIGINT(20) UNSIGNED;
-    SELECT stateid INTO sid FROM oah_state WHERE state_name = state;
-    IF (sid IS NULL) THEN
-      INSERT INTO oah_state (state_name) VALUES (state);
-      SET sid = LAST_INSERT_ID();
-    END IF;
-    SELECT countyid INTO cid FROM oah_county WHERE county_name = county;
-    IF (cid IS NULL) THEN
-      INSERT INTO oah_county (county_name) VALUES (county);
-      SET cid = LAST_INSERT_ID();
+    DECLARE CheckExists int;
+    SET CheckExists = 0;
+
+    SELECT COUNT(*) INTO CheckExists FROM oah_state WHERE state_fips = statefips;
+    IF (CheckExists = 0) THEN
+      INSERT INTO oah_state VALUES(statefips, state);
     END IF;
 
-    INSERT INTO oah_county_limits (stateid, countyid, fha_limit, gse_limit) VALUES (sid, cid, fhalimit, gselimit);
+    SELECT COUNT(*) INTO CheckExists FROM oah_county WHERE complete_fips = CONCAT(statefips, countyfips);
+    IF (CheckExists = 0) THEN
+      INSERT INTO oah_county VALUES(CONCAT(statefips, countyfips), countyfips, county);
+    END IF;
+
+    INSERT INTO oah_county_limits VALUES (CONCAT(statefips, countyfips), fhalimit, gselimit, valimit);
   END $$
 DELIMITER ;
 
