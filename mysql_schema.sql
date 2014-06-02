@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS oah_state;
 CREATE TABLE oah_state (
   state_fips  CHAR(2),
   state_name  VARCHAR(100),
+  state_abbr  CHAR(2),
   CONSTRAINT oah_state_pri_key PRIMARY KEY (state_fips)
 )
   ENGINE = InnoDB
@@ -109,7 +110,7 @@ CREATE TABLE oah_adjustments (
 -- procedure to populate county_limits
 DROP PROCEDURE IF EXISTS county_limit;
 DELIMITER $$
-CREATE PROCEDURE county_limit(IN state VARCHAR(100), IN statefips CHAR(2), IN county VARCHAR(100),
+CREATE PROCEDURE county_limit(IN state VARCHAR(100), IN abbr CHAR(2), IN statefips CHAR(2), IN county VARCHAR(100),
     IN countyfips CHAR(3), IN fhalimit VARCHAR(100), IN gselimit VARCHAR(100), IN valimit VARCHAR(100))
   BEGIN
     DECLARE CheckExists int;
@@ -117,7 +118,7 @@ CREATE PROCEDURE county_limit(IN state VARCHAR(100), IN statefips CHAR(2), IN co
 
     SELECT COUNT(*) INTO CheckExists FROM oah_state WHERE state_fips = statefips;
     IF (CheckExists = 0) THEN
-      INSERT INTO oah_state VALUES(statefips, state);
+      INSERT INTO oah_state VALUES(statefips, state, abbr);
     END IF;
 
     SELECT COUNT(*) INTO CheckExists FROM oah_county WHERE complete_fips = CONCAT(statefips, countyfips);
@@ -131,14 +132,14 @@ DELIMITER ;
 
 -- ------------------------------------
 -- change path as needed
-LOAD DATA INFILE 'Limits.csv' INTO TABLE oah_limits FIELDS TERMINATED BY ',';
-LOAD DATA INFILE 'Adjustments.csv' INTO TABLE oah_adjustments FIELDS TERMINATED BY ',';
-LOAD DATA INFILE 'Rates.csv' INTO TABLE oah_rates FIELDS TERMINATED BY ',' (institution, stateid, loanpurpose,
+LOAD DATA INFILE '/tmp/Limits.csv' INTO TABLE oah_limits FIELDS TERMINATED BY ',';
+LOAD DATA INFILE '/tmp/Adjustments.csv' INTO TABLE oah_adjustments FIELDS TERMINATED BY ',';
+LOAD DATA INFILE '/tmp/Rates.csv' INTO TABLE oah_rates FIELDS TERMINATED BY ',' (institution, stateid, loanpurpose,
   pmttype, loantype, loanterm, intadjterm, `lock`, baserate, totalpoints, io, offersagency, planid, armindex,
   interestrateadjustmentcap, annualcap, loancap, armmargin, aivalue);
 
 -- ------------------------------------
--- create user, change name and password
-CREATE USER 'dbuser'@'localhost' IDENTIFIED BY 'password';
+-- create user, change name and p@ssw0rd
+CREATE USER 'dbuser'@'localhost' IDENTIFIED BY 'dbpass';
 GRANT ALL ON dbname.* TO dbuser;
 FLUSH PRIVILEGES;

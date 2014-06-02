@@ -52,7 +52,7 @@ def read_data():
             options[keyword] = pair[1]
 
         data = {}
-        proc_query = 'CALL county_limit("%s", "%s", "%s", "%s", "%s", "%s", "%s");\n'
+        proc_query = 'CALL county_limit("%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s");\n'
 
         print " ... working with %s " % options['input_file']
         sql_output = open('county_limits.sql', 'w')
@@ -64,7 +64,7 @@ def read_data():
                 continue
             row = worksheet.row_values(i)
             state, state_fips, county_fips, complete_fips, county, gse, fha, va = row
-            sql_output.write(proc_query % (abbr_to_name[state], state_fips, county, county_fips, fha, gse, va))
+            sql_output.write(proc_query % (abbr_to_name[state], state, state_fips, county, county_fips, fha, gse, va))
         sql_output.close()
 
     except getopt.GetoptError as e:
