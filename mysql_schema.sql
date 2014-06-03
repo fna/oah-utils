@@ -87,7 +87,7 @@ CREATE TABLE oah_adjustments (
   adjvalue    FLOAT,
   minloanamt  DOUBLE UNSIGNED,
   maxloanamt  DOUBLE UNSIGNED,
-  proptype    VARCHAR(3),
+  proptype    VARCHAR(25),
   minfico     FLOAT UNSIGNED,
   maxfico     FLOAT UNSIGNED,
   minterm     SMALLINT UNSIGNED,
