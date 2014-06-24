@@ -135,8 +135,11 @@ DELIMITER ;
 LOAD DATA INFILE '/tmp/Limits.csv' INTO TABLE oah_limits FIELDS TERMINATED BY ',';
 LOAD DATA INFILE '/tmp/Adjustments.csv' INTO TABLE oah_adjustments FIELDS TERMINATED BY ',';
 LOAD DATA INFILE '/tmp/Rates.csv' INTO TABLE oah_rates FIELDS TERMINATED BY ',' (institution, stateid, loanpurpose,
-  pmttype, loantype, loanterm, intadjterm, `lock`, baserate, totalpoints, io, offersagency, planid, armindex,
-  interestrateadjustmentcap, annualcap, loancap, armmargin, aivalue);
+  pmttype, loantype, loanterm, intadjterm, `lock`, baserate, totalpoints, @io, @offersagency, planid, armindex,
+  interestrateadjustmentcap, annualcap, loancap, armmargin, aivalue)
+  SET 
+    io = IF(@io = 'True',1,0),
+    offersagency = IF(@offersagency='True',1,0);
 
 -- ------------------------------------
 -- create user, change name and p@ssw0rd
