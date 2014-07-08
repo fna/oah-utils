@@ -6,6 +6,104 @@
 CREATE DATABASE dbname;
 USE dbname;
 
+-- what's the primary key in oah_adjustment
+-- check datetime types
+
+DROP TABLE IF EXISTS oah_adjustment;
+CREATE TABLE oah_adjustment (
+  ruleid          INT(11) UNSIGNED,
+  adjvalue        DECIMAL(4,3),
+  affectratetype  CHAR(1),
+  minloanamt      INT(9) UNSIGNED,
+  maxloanamt      INT(12) UNSIGNED,
+  minltv          DECIMAL(6,3) UNSIGNED,
+  maxltv          DECIMAL(6,3) UNSIGNED,
+  minfico         DECIMAL(6,3) UNSIGNED,
+  maxfico         DECIMAL(6,3) UNSIGNED,
+  proptype        VARCHAR(15),
+  state           VARCHAR(2),
+  ruletext        TEXT,
+  loadstatus_startdate  DATETIME,
+  batchdate       DATETIME
+)
+  ENGINE = InnoDB
+  DEFAULT CHARACTER SET = utf8;
+
+DROP TABLE IF EXISTS oah_product;
+CREATE TABLE oah_product (
+  institution     VARCHAR(50),
+  regionabbrev    VARCHAR(255),
+  loanpurpose     VARCHAR(15),
+  loantype        VARCHAR(15),
+  loanterm        TINYINT UNSIGNED,
+  pmttype         VARCHAR(15),
+  proddesc        VARCHAR(255),
+  intadjterm      TINYINT,
+  adjintrvl       TINYINT,
+  singlefamily    TINYINT,
+  condo           TINYINT,
+  coop            TINYINT,
+  prodid          INT(6) UNSIGNED,
+  lender          VARCHAR(50),
+  narrative       VARCHAR(255),
+  tbflag          TINYINT,
+  vaflag          TINYINT,
+  ioflag          TINYINT,
+  exceptionid     INT(7),
+  planid          INT(6),
+  minltv          VARCHAR(15),
+  maxltv          VARCHAR(15),
+  minfico         SMALLINT UNSIGNED,
+  maxfico         SMALLINT UNSIGNED,
+  minloanamt      VARCHAR(20),
+  maxloanamt      VARCHAR(20),
+  minloanamtagency  VARCHAR(50),
+  maxloanamtagency  VARCHAR(50),
+  armid           INT(11) UNSIGNED,
+  ceiling         TINYINT,
+  anncap          TINYINT,
+  intrateadjcap   TINYINT,
+  loancap         TINYINT,
+  armindex        VARCHAR(15),
+  armmargin       DECIMAL(4,3),
+  aivalue         DECIMAL(5,4),
+  rateadjmonth    TINYINT
+)
+  ENGINE = InnoDB
+  DEFAULT CHARACTER SET = utf8;
+
+DROP TABLE IF EXISTS oah_rate;
+CREATE TABLE oah_rate (
+  ratesid         INT(11) UNSIGNED,
+  planid          INT(11) UNSIGNED,
+  regionid        INT(11) UNSIGNED,
+  `lock`          TINYINT UNSIGNED,
+  baserate        DECIMAL(5,3),
+  totalpoints     DECIMAL(5,3),
+  CONSTRAINT oah_rates_pri_key PRIMARY KEY (ratesid)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARACTER SET = utf8;
+
+DROP TABLE IF EXISTS oah_region;
+CREATE TABLE oah_region (
+  bankid          varchar(255),
+  bankname        varchar(255),
+  bankshortname   varchar(255),
+  lender          varchar(255),
+  regionabbrev    varchar(255),
+  regionnarrative varchar(255),
+  regionid        SMALLINT UNSIGNED,
+  stateid         CHAR(2),
+  statename       VARCHAR(50),
+  offersagency    TINYINT
+)
+  ENGINE = InnoDB
+  DEFAULT CHARACTER SET = utf8;
+
+
+-- ---------------------------------------
+
 DROP TABLE IF EXISTS oah_state;
 CREATE TABLE oah_state (
   state_fips  CHAR(2),
@@ -38,74 +136,6 @@ CREATE TABLE oah_county_limits (
   ENGINE = InnoDB
   DEFAULT CHARACTER SET = utf8;
 
-DROP TABLE IF EXISTS oah_limits;
-CREATE TABLE oah_limits (
-  planid      BIGINT(20) UNSIGNED,
-  minltv      FLOAT UNSIGNED,
-  maxltv      FLOAT UNSIGNED,
-  minfico     SMALLINT UNSIGNED,
-  maxfico     SMALLINT UNSIGNED,
-  minloanamt  DOUBLE UNSIGNED,
-  maxloanamt  DOUBLE UNSIGNED,
-  CONSTRAINT oah_limits_pri_key PRIMARY KEY (planid)
-)
-  ENGINE = InnoDB
-  DEFAULT CHARACTER SET = utf8;
-  -- COLLATE = utf8_bin
-
-DROP TABLE IF EXISTS oah_rates;
-CREATE TABLE oah_rates (
-  rateid      SERIAL,
-  institution VARCHAR(250) NOT NULL,
-  stateid     CHAR(2) NOT NULL,
-  loanpurpose CHAR(5),
-  pmttype     VARCHAR(5) NOT NULL,
-  loantype    VARCHAR(6),
-  loanterm    SMALLINT UNSIGNED,
-  intadjterm  FLOAT UNSIGNED,
-  `lock`        SMALLINT UNSIGNED,
-  baserate    FLOAT,
-  totalpoints FLOAT,
-  io          BOOLEAN,
-  offersagency  BOOLEAN,
-  planid      BIGINT(20) UNSIGNED,
-  armindex    VARCHAR(5),
-  interestrateadjustmentcap FLOAT,
-  annualcap   FLOAT UNSIGNED,
-  loancap     FLOAT UNSIGNED,
-  armmargin   FLOAT UNSIGNED,
-  aivalue     FLOAT UNSIGNED,
-  CONSTRAINT oah_rates_pri_key PRIMARY KEY (rateid)
-)
-  ENGINE = InnoDB
-  DEFAULT CHARACTER SET = utf8;
-
-DROP TABLE IF EXISTS oah_adjustments;
-CREATE TABLE oah_adjustments (
-  planid      BIGINT(20) UNSIGNED,
-  affectratetype  CHAR(1),
-  adjvalue    FLOAT,
-  minloanamt  DOUBLE UNSIGNED,
-  maxloanamt  DOUBLE UNSIGNED,
-  proptype    VARCHAR(25),
-  minfico     FLOAT UNSIGNED,
-  maxfico     FLOAT UNSIGNED,
-  minterm     SMALLINT UNSIGNED,
-  maxterm     SMALLINT UNSIGNED,
-  minltv      FLOAT UNSIGNED,
-  maxltv      FLOAT UNSIGNED,
-  mincltv     FLOAT,
-  maxcltv     FLOAT,
-  minunits    SMALLINT UNSIGNED,
-  maxunits    SMALLINT UNSIGNED,
-  state       CHAR(2),
-  va          VARCHAR(10),
-  adjtextpoint  TEXT,
-  adjtextrate   TEXT
-)
-  ENGINE = InnoDB
-  DEFAULT CHARACTER SET = utf8;
-
 -- ------------------------------------
 -- procedure to populate county_limits
 DROP PROCEDURE IF EXISTS county_limit;
@@ -132,11 +162,21 @@ DELIMITER ;
 
 -- ------------------------------------
 -- change path as needed
-LOAD DATA INFILE '/tmp/Limits.csv' INTO TABLE oah_limits FIELDS TERMINATED BY ',';
-LOAD DATA INFILE '/tmp/Adjustments.csv' INTO TABLE oah_adjustments FIELDS TERMINATED BY ',';
-LOAD DATA INFILE '/tmp/Rates.csv' INTO TABLE oah_rates FIELDS TERMINATED BY ',' (institution, stateid, loanpurpose,
-  pmttype, loantype, loanterm, intadjterm, `lock`, baserate, totalpoints, io, offersagency, planid, armindex,
-  interestrateadjustmentcap, annualcap, loancap, armmargin, aivalue);
+LOAD DATA INFILE '/tmp/oah_adjustment.txt' INTO TABLE oah_adjustment FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
+  LINES TERMINATED BY '\r\n'
+  (ruleid, adjvalue, affectratetype, minloanamt, maxloanamt, minltv, maxltv, minfico, maxfico, proptype, state,
+  ruletext, @loadstatus_startdate, @batchdate)
+  SET loadstatus_startdate = STR_TO_DATE(@loadstatus_startdate, '%m/%d/%Y %H:%i:%s'),
+    batchdate = STR_TO_DATE(@batchdate, '%m/%d/%Y %H:%i:%s');
+
+LOAD DATA INFILE '/tmp/oah_product.txt' INTO TABLE oah_product FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
+  LINES TERMINATED BY '\r\n';
+
+LOAD DATA INFILE '/tmp/oah_rate.txt' INTO TABLE oah_rate FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
+  LINES TERMINATED BY '\r\n';
+
+LOAD DATA INFILE '/tmp/oah_region.txt' INTO TABLE oah_region FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
+  LINES TERMINATED BY '\r\n';
 
 -- ------------------------------------
 -- create user, change name and p@ssw0rd
