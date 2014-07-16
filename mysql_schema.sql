@@ -164,13 +164,21 @@ DELIMITER ;
 -- change path as needed
 LOAD DATA INFILE '/tmp/oah_adjustment.txt' INTO TABLE oah_adjustment FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
   LINES TERMINATED BY '\r\n'
-  (ruleid, adjvalue, affectratetype, minloanamt, maxloanamt, minltv, maxltv, minfico, maxfico, proptype, state,
-  ruletext, @loadstatus_startdate, @batchdate)
+    (ruleid, adjvalue, affectratetype, minloanamt, maxloanamt, minltv, maxltv, minfico, maxfico, proptype, state,
+    ruletext, @loadstatus_startdate, @batchdate)
   SET loadstatus_startdate = STR_TO_DATE(@loadstatus_startdate, '%m/%d/%Y %H:%i:%s'),
     batchdate = STR_TO_DATE(@batchdate, '%m/%d/%Y %H:%i:%s');
 
 LOAD DATA INFILE '/tmp/oah_product.txt' INTO TABLE oah_product FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
-  LINES TERMINATED BY '\r\n';
+  LINES TERMINATED BY '\r\n'
+    (institution, regionabbrev, loanpurpose, loantype, loanterm, pmttype, proddesc, intadjterm, adjintrvl,
+    singlefamily, condo, coop, prodid, lender, narrative, tbflag, vaflag, ioflag, exceptionid, planid, @minltv,
+    @maxltv, minfico, maxfico, @minloanamt, @maxloanamt, minloanamtagency, maxloanamtagency, armid, ceiling, anncap,
+    intrateadjcap, loancap, armindex, armmargin, aivalue, rateadjmonth)
+  SET minltv = SUBSTR(@minltv, 2),
+    maxltv = SUBSTR(@maxltv, 2),
+    minloanamt = SUBSTR(@minloanamt, 2),
+    maxloanamt = SUBSTR(@maxloanamt, 2);
 
 LOAD DATA INFILE '/tmp/oah_rate.txt' INTO TABLE oah_rate FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
   LINES TERMINATED BY '\r\n';
